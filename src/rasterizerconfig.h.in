@@ -1,0 +1,2 @@
+// the configured options and settings for Tutorial
+#define RASTERIZER_VERSION_STRING "@PROJECT_VERSION@"
