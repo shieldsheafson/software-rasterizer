@@ -34,3 +34,10 @@ You can try to render your own obj files; add the .obj files to input and change
 
 ## License
 MIT License - see LICENSE file for details
+
+## Thoughts and Plans
+The templated classes and functions are awful and I have been putting off choosing the base type I will use because the different options have different appeals but I need to make a choice. 
+
+Ideally, I have more functionality soon; I very much doubt a more complex model will render correctly right now (like I need a depth buffer), but render a cube seemed like a decent place to pause for right now.
+
+I need to clean up the code pretty bad, but that is a project for tomorrow; lots of magic numbers and wacky uncomment code. 
