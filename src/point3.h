@@ -27,36 +27,10 @@ struct Point3 {
     this->mZ -= rhs.mZ;
     return *this;
   }
-  Point3& operator*=(const Point3& rhs) {
-    this->mX *= rhs.mX;
-    this->mY *= rhs.mY;
-    this->mZ *= rhs.mZ;
-    return *this;
-  }
-  Point3& operator/=(const Point3& rhs) {
-    this->mX /= rhs.mX;
-    this->mY /= rhs.mY;
-    this->mZ /= rhs.mZ;
-    return *this;
-  }
   //-----------------------------------------------------------
 
 
-  // arithmetic operators with singlton------------------------
-  Point3& operator+=(const T& rhs) {
-    this->mX += rhs;
-    this->mY += rhs;
-    this->mZ += rhs;
-    return *this;
-  }
-
-  Point3& operator-=(const T& rhs) {
-    this->mX -= rhs;
-    this->mY -= rhs;
-    this->mZ -= rhs;
-    return *this;
-  }
-
+  // arithmetic operators with scalar------------------------
   Point3& operator*=(const T& rhs) {
     this->mX *= rhs;
     this->mY *= rhs;
@@ -95,31 +69,11 @@ template<typename T>
 Point3<T> operator-(const Point3<T>& lhs, const Point3<T>& rhs) {
   return Point3<T>(lhs.mX - rhs.mX, lhs.mY - rhs.mY, lhs.mZ - rhs.mZ);
 }
-template<typename T>
-Point3<T> operator*(const Point3<T>& lhs, const Point3<T>& rhs) {
-  return Point3<T>(lhs.mX * rhs.mX, lhs.mY * rhs.mY, lhs.mZ * rhs.mZ);
-}
-template<typename T>
-Point3<T> operator/(const Point3<T>& lhs, const Point3<T>& rhs) {
-  return Point3<T>(lhs.mX / rhs.mX, lhs.mY / rhs.mY, lhs.mZ / rhs.mZ);
-}
-template<typename T>
-Point3<T> operator%(const Point3<T>& lhs, const Point3<T>& rhs) {
-  return Point3<T>(lhs.mX % rhs.mX, lhs.mY % rhs.mY, lhs.mZ % rhs.mZ);
-}
 //-------------------------------------------------------------
 
 
 
-// arithmetic operators with singlton--------------------------
-template<typename T>
-Point3<T> operator+(const Point3<T>& lhs, const T& rhs) {
-  return Point3<T>(lhs.mX + rhs, lhs.mY + rhs, lhs.mZ + rhs);
-}
-template<typename T>
-Point3<T> operator-(const Point3<T>& lhs, const T& rhs) {
-  return Point3<T>(lhs.mX - rhs, lhs.mY - rhs, lhs.mZ - rhs);
-}
+// arithmetic operators with scalar--------------------------
 template<typename T>
 Point3<T> operator*(const Point3<T>& lhs, const T& rhs) {
   return Point3<T>(lhs.mX * rhs, lhs.mY * rhs, lhs.mZ * rhs);
@@ -128,14 +82,11 @@ template<typename T>
 Point3<T> operator/(const Point3<T>& lhs, const T& rhs) {
   return Point3<T>(lhs.mX / rhs, lhs.mY / rhs, lhs.mZ / rhs);
 }
-template<typename T>
-Point3<T> operator%(const Point3<T>& lhs, const T& rhs) {
-  return Point3<T>(lhs.mX % rhs, lhs.mY % rhs, lhs.mZ % rhs);
-}
 //--------------------------------------------------------------
 
 
 
+// input/output-------------------------------------------------
 template<typename T>
 std::ostream& operator<<(std::ostream& os, const Point3<T>& p) {
   os << p.mX << " " << p.mY << " " << p.mZ;
@@ -144,6 +95,6 @@ std::ostream& operator<<(std::ostream& os, const Point3<T>& p) {
 template<typename T>
 std::istream& operator>>(std::istream& is, Point3<T>& p) {
   is >> p.mX  >> p.mY >> p.mZ;
-
   return is;
 }
+//--------------------------------------------------------------
