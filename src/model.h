@@ -23,7 +23,7 @@ class Model {
       int values[3] = {0, 0, 0};
       int index = 0;
       
-      while (std::getline(iss, token, '/') && index < 3) {
+      while (std::getline(iss, token, '/') && index < 3 && token != "") {
         values[index++] = std::stoi(token);
       }
       
