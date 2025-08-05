@@ -113,13 +113,13 @@ class Model {
     }
 
     // with point
-    Model<T>& operator+=(const Point<T>& rhs) {
+    Model<T>& operator+=(const Point3<T>& rhs) {
       for (Triangle<T>& triangle : mTriangles) {
         triangle += rhs;
       }
       return *this;
     }
-    Model<T>& operator-=(const Point<T>& rhs) {
+    Model<T>& operator-=(const Point3<T>& rhs) {
       for (Triangle<T>& triangle : mTriangles) {
         triangle -= rhs;
       }
@@ -154,7 +154,7 @@ Model<T> operator/(const Model<T>& lhs, const T& rhs) {
 
 // with point
 template<typename T>
-Model<T> operator+(const Model<T>& lhs, const Point<T>& rhs) {
+Model<T> operator+(const Model<T>& lhs, const Point3<T>& rhs) {
   const std::vector<Triangle<T> >& oldTriangles = lhs.GetTriangles();
   std::vector<Triangle<T> > newTriangles;
   newTriangles.reserve(oldTriangles.size());
@@ -165,7 +165,7 @@ Model<T> operator+(const Model<T>& lhs, const Point<T>& rhs) {
   return Model(newTriangles);
 }
 template<typename T>
-Model<T> operator-(const Model<T>& lhs, const Point<T>& rhs) {
+Model<T> operator-(const Model<T>& lhs, const Point3<T>& rhs) {
   const std::vector<Triangle<T> >& oldTriangles = lhs.GetTriangles();
   std::vector<Triangle<T> > newTriangles;
   newTriangles.reserve(oldTriangles.size());

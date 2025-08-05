@@ -7,40 +7,49 @@
 template<typename T>
 class Transform {
   private:
-    T mPitch;
-    T mYaw;
-    T mRoll;
+    double mPitch;
+    double mYaw;
+    double mRoll;
+
+    Point3<T> mPosition;
   public:
-    Transform(): mPitch(0), mYaw(0), mRoll(0) {}
-    Transform(T pitch, T yaw, T roll): mPitch(pitch), mYaw(yaw), mRoll(roll) {}
+    Transform(): mPitch(0), mYaw(0), mRoll(0), mPosition(Point3<T>(0,0,0)) {}
+    Transform(double pitch, double yaw, double roll)
+      : mPitch(pitch), mYaw(yaw), mRoll(roll), mPosition(Point3<T>(0,0,0)) {}
+    Transform(double pitch, double yaw, double roll, Point3<T> position)
+      : mPitch(pitch), mYaw(yaw), mRoll(roll), mPosition(position) {}
 
-    void SetYaw(T yaw) { mYaw = yaw; }
-    void SetPitch(T pitch) { mPitch = pitch; }
-    void SetRoll(T roll) { mRoll = roll; }
+    void SetYaw(double yaw) { mYaw = yaw; }
+    void SetPitch(double pitch) { mPitch = pitch; }
+    void SetRoll(double roll) { mRoll = roll; }
 
-    T GetYaw() const { return mYaw; }
-    T GetPitch() const { return mPitch; }
-    T GetRoll() const { return mRoll; }
+    double GetYaw() const { return mYaw; }
+    double GetPitch() const { return mPitch; }
+    double GetRoll() const { return mRoll; }
+
+    Point3<T> TranslatePoint(const Point3<T>& p) const {
+      return p + mPosition;
+    }
 
     Point3<T> RotatePoint(const Point3<T>& p) const {
-      T cosPitch = std::cos(mPitch);
-      T sinPitch = std::sin(mPitch);
+      double cosPitch = std::cos(mPitch);
+      double sinPitch = std::sin(mPitch);
 
-      T cosYaw = std::cos(mYaw);
-      T sinYaw = std::sin(mYaw);
+      double cosYaw = std::cos(mYaw);
+      double sinYaw = std::sin(mYaw);
       
-      T cosRoll = std::cos(mRoll);
-      T sinRoll = std::sin(mRoll);
+      double cosRoll = std::cos(mRoll);
+      double sinRoll = std::sin(mRoll);
 
-      T m00 = cosYaw * cosRoll;
-      T m01 = cosYaw * sinRoll;
-      T m02 = -sinYaw;
-      T m10 = sinPitch * sinYaw * cosRoll - cosPitch * sinRoll;
-      T m11 = sinPitch * sinYaw * sinRoll + cosPitch * cosRoll;
-      T m12 = sinPitch * cosYaw;
-      T m20 = cosPitch * sinYaw * cosRoll + sinPitch * sinRoll;
-      T m21 = cosPitch * sinYaw * sinRoll - sinPitch * cosRoll;
-      T m22 = cosPitch * cosYaw;
+      double m00 = cosYaw * cosRoll;
+      double m01 = cosYaw * sinRoll;
+      double m02 = -sinYaw;
+      double m10 = sinPitch * sinYaw * cosRoll - cosPitch * sinRoll;
+      double m11 = sinPitch * sinYaw * sinRoll + cosPitch * cosRoll;
+      double m12 = sinPitch * cosYaw;
+      double m20 = cosPitch * sinYaw * cosRoll + sinPitch * sinRoll;
+      double m21 = cosPitch * sinYaw * sinRoll - sinPitch * cosRoll;
+      double m22 = cosPitch * cosYaw;
 
       return Point3<T>(
         m00 * p.mX + m01 * p.mY + m02 * p.mZ,

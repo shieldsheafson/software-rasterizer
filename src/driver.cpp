@@ -1,8 +1,11 @@
+#include "camera.h"
 #include "model.h"
 #include "rasterizerconfig.h"
 #include "rendertarget.h"
 #include "transform.h"
 #include "utils.h"
+
+#include <cmath>
 
 #define SDL_MAIN_USE_CALLBACKS 1
 #include <SDL3/SDL.h>
@@ -17,9 +20,14 @@ static int screenHeight = 700;
 static RenderTarget renderTarget(screenWidth, screenHeight);
 
 static Model<float> model("../input/cube.obj");
-static Transform<float> transform(0.0, 0.01, 0.0);
+Model<float> m = model;
+static Transform<float> transform(0.0, 0.0, 0.0, Point3<float>(0,0,5));
+static Camera<float> camera = Camera<float>();
 
+static int start;
 static int times = 0;
+
+static float movementSpeed = 0.5;
 
 // Init
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
@@ -43,6 +51,8 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     return SDL_APP_FAILURE;
   }
 
+  start = SDL_GetTicks();
+
   return SDL_APP_CONTINUE;
 }
 
@@ -50,6 +60,18 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
     if (event->type == SDL_EVENT_QUIT) {
         return SDL_APP_SUCCESS;  // Exit gracefully
+    }
+
+    if (event->type == SDL_EVENT_KEY_DOWN) {
+      if (event->key.key == SDLK_UP) {
+        camera.GetPosition() += Point3<float>(0,0,movementSpeed);
+      } else if (event->key.key == SDLK_DOWN) {
+        camera.GetPosition() += Point3<float>(0,0,-movementSpeed);
+      } else if (event->key.key == SDLK_LEFT) {
+        camera.GetPosition() += Point3<float>(-movementSpeed,0,0);
+      } else if (event->key.key == SDLK_RIGHT) {
+        camera.GetPosition() += Point3<float>(movementSpeed,0,0);
+      }
     }
     return SDL_APP_CONTINUE;
 }
@@ -64,13 +86,14 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   renderTarget.SetPitch(pitch);
   renderTarget.Clear();
 
-  if (times == 50) {
-    transform.SetPitch(0.01);
-    transform.SetYaw(0.0);
+  if (times % 100 < 50) {
+    camera.GetTransform().SetYaw(camera.GetTransform().GetYaw() + 0.01);
+  } else {
+    camera.GetTransform().SetYaw(camera.GetTransform().GetYaw() - 0.01);
   }
-
   model.Transform(transform);
-  Render(model, renderTarget);
+  Render(model, Point3<float>(0, 0, 5), renderTarget, camera);
+  Render(m, Point3<float>(2, 0, 0), renderTarget, camera);
 
   SDL_UnlockTexture(texture);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -84,6 +107,10 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
 void SDL_AppQuit(void *appstate, SDL_AppResult result)
 {
   /* SDL will clean up the window/renderer for us. */
+  int now = SDL_GetTicks();
+  int elapsed = static_cast<double>(now - start) / 1000.0;
+  double fps = static_cast<double>(times) / elapsed;
+  std::cout << "FPS: " << fps << std::endl;
   SDL_DestroyTexture(texture);
   texture = NULL;
 }

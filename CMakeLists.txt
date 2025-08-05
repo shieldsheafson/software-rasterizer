@@ -25,6 +25,7 @@ target_sources(rasterizer PRIVATE  # Changed to PRIVATE and correct target name
     src/color.cpp
     
     # Headers for IDE
+    src/camera.h
     src/color.h
     src/model.h
     src/point.h
