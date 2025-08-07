@@ -23,7 +23,12 @@ add_executable(rasterizer)
 target_sources(rasterizer PRIVATE  # Changed to PRIVATE and correct target name
     src/driver.cpp
     src/color.cpp
+    src/model.cpp
     src/point.cpp
+    src/point3.cpp
+    src/transform.cpp
+    src/triangle.cpp
+    src/utils.cpp
     
     # Headers for IDE
     src/camera.h

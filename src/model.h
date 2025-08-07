@@ -12,10 +12,9 @@
 #include <tuple>
 #include <vector>
 
-template<typename T>
 class Model {
   private:
-    std::vector<Triangle<T> > mTriangles;
+    std::vector<Triangle > mTriangles;
 
     std::tuple<int, int, int> SplitFace(const std::string& s) {
       std::istringstream iss(s);
@@ -32,7 +31,7 @@ class Model {
 
     void LoadObjFile(std::ifstream& ifs) {
       // doesn't read from texture file yet
-      std::vector<Point3<T> > vertices;
+      std::vector<Point3 > vertices;
       vertices.reserve(1000);
       mTriangles.reserve(333);
 
@@ -44,17 +43,17 @@ class Model {
         iss >> id;
         
         if (id == "v") {
-          Point3<T> p;
+          Point3 p;
           iss >> p;
           vertices.push_back(p);
         } else if (id == "f") {
           std::string face;
-          Point3<T> a, b, c;
+          Point3 a, b, c;
 
           int i = 0;
           while (iss >> face) {
             auto [vertexIndex, textureCoordinateIndex, vertexNormalIndex] = SplitFace(face);
-            Point3<T> vertex = vertices.at(vertexIndex - 1);
+            Point3 vertex = vertices.at(vertexIndex - 1);
 
             switch (i++) {
               case (0):
@@ -65,12 +64,12 @@ class Model {
                 break;
               case (2):
                 c = vertex;
-                mTriangles.push_back(Triangle<T>(a, b, c));
+                mTriangles.push_back(Triangle(a, b, c));
                 break;
               default:
                 b = c;
                 c = vertex;
-                mTriangles.push_back(Triangle<T>(a, b, c));
+                mTriangles.push_back(Triangle(a, b, c));
             }
           }
         }
@@ -79,7 +78,7 @@ class Model {
 
   public:
     Model() {}
-    Model(std::vector<Triangle<T> > triangles): mTriangles(triangles) {}
+    Model(std::vector<Triangle > triangles): mTriangles(triangles) {}
     Model(std::string objFilePath) {
       std::ifstream ifs(objFilePath);
 
@@ -90,88 +89,23 @@ class Model {
       LoadObjFile(ifs);
     }
 
-    const std::vector<Triangle<T> >& GetTriangles() const { return mTriangles; }
+    const std::vector<Triangle >& GetTriangles() const { return mTriangles; }
 
-    void Transform(Transform<T> r) {
-      for (Triangle<T>& triangle : mTriangles) {
-        triangle.Transform(r);
-      }
-    }
+    void TransformModel(Transform r);
 
     // with scalar
-    Model<T>& operator*=(const T& rhs) {
-      for (Triangle<T>&  triangle : mTriangles) {
-        triangle *= rhs;
-      }
-      return *this;
-    }
-    Model<T>& operator/=(const T& rhs) {
-      for (Triangle<T>& triangle : mTriangles) {
-        triangle /= rhs;
-      }
-      return *this;
-    }
+    Model& operator*=(float rhs);
+    Model& operator/=(float rhs);
 
     // with point
-    Model<T>& operator+=(const Point3<T>& rhs) {
-      for (Triangle<T>& triangle : mTriangles) {
-        triangle += rhs;
-      }
-      return *this;
-    }
-    Model<T>& operator-=(const Point3<T>& rhs) {
-      for (Triangle<T>& triangle : mTriangles) {
-        triangle -= rhs;
-      }
-      return *this;
-    }
-  
+    Model& operator+=(const Point3& rhs);
+    Model& operator-=(const Point3& rhs);
 };
 
 // with scalar
-template<typename T>
-Model<T> operator*(const Model<T>& lhs, const T& rhs) {
-  const std::vector<Triangle<T> >& oldTriangles = lhs.GetTriangles();
-  std::vector<Triangle<T> > newTriangles;
-  newTriangles.reserve(oldTriangles.size());
-  for (const Triangle<T>& triangle : oldTriangles) {
-    newTriangles.push_back(triangle * rhs);
-  } 
-
-  return Model(newTriangles);
-}
-template<typename T>
-Model<T> operator/(const Model<T>& lhs, const T& rhs) {
-  const std::vector<Triangle<T> >& oldTriangles = lhs.GetTriangles();
-  std::vector<Triangle<T> > newTriangles;
-  newTriangles.reserve(oldTriangles.size());
-  for (const Triangle<T>& triangle : oldTriangles) {
-    newTriangles.push_back(triangle / rhs);
-  } 
-
-  return Model(newTriangles);
-}
+Model operator*(const Model& lhs, float rhs);
+Model operator/(const Model& lhs, float rhs);
 
 // with point
-template<typename T>
-Model<T> operator+(const Model<T>& lhs, const Point3<T>& rhs) {
-  const std::vector<Triangle<T> >& oldTriangles = lhs.GetTriangles();
-  std::vector<Triangle<T> > newTriangles;
-  newTriangles.reserve(oldTriangles.size());
-  for (const Triangle<T>& triangle : oldTriangles) {
-    newTriangles.push_back(triangle + rhs);
-  } 
-
-  return Model(newTriangles);
-}
-template<typename T>
-Model<T> operator-(const Model<T>& lhs, const Point3<T>& rhs) {
-  const std::vector<Triangle<T> >& oldTriangles = lhs.GetTriangles();
-  std::vector<Triangle<T> > newTriangles;
-  newTriangles.reserve(oldTriangles.size());
-  for (const Triangle<T>& triangle : oldTriangles) {
-    newTriangles.push_back(triangle - rhs);
-  } 
-
-  return Model(newTriangles);
-}
+Model operator+(const Model& lhs, const Point3& rhs);
+Model operator-(const Model& lhs, const Point3& rhs);
