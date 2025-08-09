@@ -1,6 +1,19 @@
 #include "utils.h"
 
-std::pair<Point, Point > BoundingBox(const Point3& a, const Point3& b, const Point3& c) {
+Point3 TransformToScreenCoordinates(const Point3& point, const Point& maxPoint, const Camera& camera) {
+  // working under the assumption vfov == hfov
+  // Point3 p = camera.GetTransform().RotatePoint(localPoint + modelWorldPosition - camera.GetPosition());
+
+  double screenHeight = 2 * std::tan((camera.GetFov() / 2.0) * M_PI / 180.0);
+  float pixelsPerWorldUnit = maxPoint.mY / screenHeight / point.mZ;
+
+  Point pixelOffset = point.TwoD() * pixelsPerWorldUnit;
+  Point screenPoint = maxPoint / 2.0f + pixelOffset;
+
+  return Point3(screenPoint.mX, screenPoint.mY, point.mZ);
+}
+
+std::pair<Point, Point > BoundingBox(const Point& a, const Point& b, const Point& c) {
   float minX = std::min({a.mX, b.mX, c.mX});
   float minY = std::min({a.mY, b.mY, c.mY});
 
@@ -29,22 +42,26 @@ void Render(const Model& model, const Point3& modelWorldPosition, RenderTarget& 
 
   std::vector<std::vector<float> > depthBuffer(target.GetHeight(), std::vector<float>(target.GetWidth(), std::numeric_limits<float>::max()));
 
+  Model movedModel = model + modelWorldPosition + camera.GetPosition();
+  movedModel.TransformModel(camera.GetTransform());
 
-  std::vector<Triangle > triangles = model.GetTriangles();
+  std::vector<Triangle > triangles = movedModel.GetTriangles();
 
   for (unsigned int i = 0; i < triangles.size(); ++i) {
-    const Triangle& triangle = triangles.at(i);
-    Point numPixels = Point(target.GetWidth(), target.GetHeight());
-    Point3 a = TransformToScreenCoordinates(triangle.GetA(), modelWorldPosition, numPixels, camera);
-    Point3 b = TransformToScreenCoordinates(triangle.GetB(), modelWorldPosition, numPixels, camera);
-    Point3 c = TransformToScreenCoordinates(triangle.GetC(), modelWorldPosition, numPixels, camera);
+    Triangle triangle = triangles.at(i);
 
-    // ignore backfaces of triangles
-    if (PointOnLeftSideOfVector(Point(a.mX, a.mY), Point(b.mX, b.mY), Point(c.mX, c.mY))) {
-      continue;
-    }
+    Point maxPoint = Point(target.GetWidth(), target.GetHeight());
 
-    std::pair<Point, Point > boundingBox = BoundingBox(a, b, c);
+    // x y are screen coordinantes while z is the original depth
+    Point3 a = TransformToScreenCoordinates(triangle.GetA(), maxPoint, camera);
+    Point3 b = TransformToScreenCoordinates(triangle.GetB(), maxPoint, camera);
+    Point3 c = TransformToScreenCoordinates(triangle.GetC(), maxPoint, camera);
+
+    Point aScreenCoords = a.TwoD();
+    Point bScreenCoords = b.TwoD();
+    Point cScreenCoords = c.TwoD();
+
+    std::pair<Point, Point > boundingBox = BoundingBox(aScreenCoords, bScreenCoords, cScreenCoords);
     int minX = std::max(static_cast<int>(boundingBox.first.mX), 0);
     int maxX = std::min(static_cast<int>(boundingBox.second.mX), target.GetWidth());
     int minY = std::max(static_cast<int>(boundingBox.first.mY), 0);
@@ -52,7 +69,32 @@ void Render(const Model& model, const Point3& modelWorldPosition, RenderTarget& 
 
     for (int y = minY; y < maxY; ++y) {
       for (int x = minX; x < maxX; ++x) {
-        if (PointInTriangle(a, b, c, Point(x, y))) {
+        Point currentScreenCoords = Point(x, y);
+
+        float signedTriangleABPArea = SignedTriangleArea(aScreenCoords, bScreenCoords, currentScreenCoords);
+        float signedTriangleBCPArea = SignedTriangleArea(bScreenCoords, cScreenCoords, currentScreenCoords);
+        float signedTriangleCAPArea = SignedTriangleArea(cScreenCoords, aScreenCoords, currentScreenCoords);
+
+        if (signedTriangleABPArea < 0 || signedTriangleBCPArea < 0 || signedTriangleCAPArea < 0) {
+          continue;
+        }
+
+        float triangleABPArea = std::abs(signedTriangleABPArea);
+        float triangleBCPArea = std::abs(signedTriangleBCPArea);
+        float triangleCAPArea = std::abs(signedTriangleCAPArea);
+
+        float totalTriangleArea = triangleABPArea + triangleBCPArea + triangleCAPArea;
+
+        if (totalTriangleArea == 0) {
+          continue;
+        }
+
+        float depth = a.mZ * (triangleBCPArea / totalTriangleArea)
+                + b.mZ * (triangleCAPArea / totalTriangleArea)
+                + c.mZ * (triangleABPArea / totalTriangleArea);
+        
+        if (depth < depthBuffer.at(y).at(x)) {
+          depthBuffer.at(y).at(x) = depth;
           target.SetPixel(x, y, colors.at(i % 12));
         }
       }
@@ -61,42 +103,9 @@ void Render(const Model& model, const Point3& modelWorldPosition, RenderTarget& 
 }
 
 
-bool PointOnLeftSideOfVector(const Point& a, const Point& b, const Point& p) {
-  Point ab = b - a;
-  Point ap = p - a;
-  Point abPerpendicular = ab.Perpendicular();
-  return ap.Dot(abPerpendicular) < 0;
-}
-
-
 float SignedTriangleArea(const Point& a, const Point& b, const Point& c) {
   Point ab = b - a;
   Point ac = c - a;
   Point abPerpendicular = ab.Perpendicular();
   return ac.Dot(abPerpendicular);
-}
-
-
-bool PointInTriangle(const Point3& a, const Point3& b, const Point3& c, const Point& p) {
-  // Point is inside the triangle if it is on the same side of all edges
-  // We avoid rendering the back of triangles by only checking
-  // if the point is on the left side of all edges
-  if (PointOnLeftSideOfVector(Point(a.mX, a.mY), Point(b.mX, b.mY), p)) return false;
-  if (PointOnLeftSideOfVector(Point(b.mX, b.mY), Point(c.mX, c.mY), p)) return false;
-  if (PointOnLeftSideOfVector(Point(c.mX, c.mY), Point(a.mX, a.mY), p)) return false;
-  return true;
-}
-
-
-Point3 TransformToScreenCoordinates(const Point3& localPoint, const Point3& modelWorldPosition, const Point numPixels, const Camera& camera) {
-  // working under the assumption vfov == hfov
-  Point3 p = camera.GetTransform().RotatePoint(localPoint + modelWorldPosition - camera.GetPosition());
-
-  double screenHeight = 2 * std::tan((camera.GetFov() / 2.0) * M_PI / 180.0);
-  float pixelsPerWorldUnit = numPixels.mY / screenHeight / p.mZ;
-
-  Point pixelOffset = Point(p.mX, p.mY) * pixelsPerWorldUnit;
-  Point screenPoint = numPixels / 2.0f + pixelOffset;
-
-  return Point3(screenPoint.mX, screenPoint.mY, p.mZ);
 }

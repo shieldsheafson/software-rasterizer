@@ -1,5 +1,7 @@
 #pragma once
 
+#include "point.h"
+
 #include <cmath>
 #include <iostream>
 
@@ -13,6 +15,7 @@ struct Point3 {
   Point3(float x, float y, float z): mX(x), mY(y), mZ(z) {}
 
   float Dot(const Point3& other) { return mX * other.mX + mY * other.mY + mZ * other.mZ; }
+  Point TwoD() const { return Point(mX, mY); }
 
   // arithmetic operators with other point---------------------
   Point3& operator+=(const Point3& rhs);
