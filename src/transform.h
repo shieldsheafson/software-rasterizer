@@ -21,12 +21,18 @@ class Transform {
     void SetYaw(double yaw) { mYaw = yaw; }
     void SetPitch(double pitch) { mPitch = pitch; }
     void SetRoll(double roll) { mRoll = roll; }
+    void SetPosition(const Point3& p) { mPosition = p; }
 
     double GetYaw() const { return mYaw; }
     double GetPitch() const { return mPitch; }
     double GetRoll() const { return mRoll; }
 
+    const Point3& GetPosition() const { return mPosition; }
+    Point3& GetPosition() { return mPosition; }
+
     Point3 TranslatePoint(const Point3& p) const { return p + mPosition; }
 
     Point3 RotatePoint(const Point3& p) const;
+
+    Point3 TransformPoint(const Point3& p) const { return RotatePoint(TranslatePoint(p)); }
 };

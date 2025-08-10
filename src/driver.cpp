@@ -19,9 +19,9 @@ static int screenWidth = 1000;
 static int screenHeight = 700;
 static RenderTarget renderTarget(screenWidth, screenHeight);
 
-static Model model("../input/monkey.obj");
+static Model model("../input/cube.obj");
 Model m = model;
-static Transform transform(0.01, 0.01, 0.0, Point3(0,0,5));
+static Transform transform(0.0, 0.0, 0.0, Point3(0,0,0));
 static Camera camera = Camera();
 
 static int start;
@@ -76,13 +76,17 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
 
     if (event->type == SDL_EVENT_KEY_DOWN) {
       if (event->key.key == SDLK_UP) {
-        camera.GetPosition() += Point3(0,0,movementSpeed);
+        camera.Forward(movementSpeed);
       } else if (event->key.key == SDLK_DOWN) {
-        camera.GetPosition() += Point3(0,0,-movementSpeed);
+        camera.Backward(movementSpeed);
       } else if (event->key.key == SDLK_LEFT) {
-        camera.GetPosition() += Point3(-movementSpeed,0,0);
+        camera.Left(movementSpeed);
       } else if (event->key.key == SDLK_RIGHT) {
-        camera.GetPosition() += Point3(movementSpeed,0,0);
+        camera.Right(movementSpeed);
+      } else if (event->key.key == SDLK_Z) {
+        camera.PanLeft(0.05);
+      } else if (event->key.key == SDLK_X) {
+        camera.PanRight(0.05);
       }
     }
     return SDL_APP_CONTINUE;
@@ -104,8 +108,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   //   camera.GetTransform().SetYaw(camera.GetTransform().GetYaw() - 0.01);
   // }
   model.TransformModel(transform);
-  Render(model, Point3(0, 0, 5), renderTarget, camera);
-  // Render(m, Point3(2, 0, 1.5), renderTarget, camera);
+  Render(model, Point3(-2, 0, 5), renderTarget, camera);
+  Render(m, Point3(2, 0, 4.5), renderTarget, camera);
 
   SDL_UnlockTexture(texture);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);

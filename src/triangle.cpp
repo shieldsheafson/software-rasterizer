@@ -1,9 +1,9 @@
 #include "triangle.h"
 
 void Triangle::TransformTriangle(Transform t) {
-  mA = t.RotatePoint(mA);
-  mB = t.RotatePoint(mB);
-  mC = t.RotatePoint(mC);
+  mA = t.TransformPoint(mA);
+  mB = t.TransformPoint(mB);
+  mC = t.TransformPoint(mC);
 }
 
 // with scalar

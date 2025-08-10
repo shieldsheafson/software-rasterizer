@@ -42,7 +42,7 @@ void Render(const Model& model, const Point3& modelWorldPosition, RenderTarget& 
 
   std::vector<std::vector<float> > depthBuffer(target.GetHeight(), std::vector<float>(target.GetWidth(), std::numeric_limits<float>::max()));
 
-  Model movedModel = model + modelWorldPosition + camera.GetPosition();
+  Model movedModel = model + modelWorldPosition;
   movedModel.TransformModel(camera.GetTransform());
 
   std::vector<Triangle > triangles = movedModel.GetTriangles();

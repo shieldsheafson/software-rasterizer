@@ -6,30 +6,53 @@
 class Camera {
   private:
     double mFov;
-    Point3 mPosition;
     Transform mTransform;
 
   public:
     Camera()
-      : mFov(60), mPosition(Point3(0,0,0)), mTransform(0, 0, 0) {}
+      : mFov(60), mTransform(0, 0, 0) {}
     Camera(double fov, const Point3& position, double pitch, double yaw, double roll)
-      : mFov(fov), mPosition(position), mTransform(pitch, yaw, roll) {}
+      : mFov(fov), mTransform(pitch, yaw, roll) {}
     Camera(double fov, const Point3& position, const Transform& transform)
-      : mFov(fov), mPosition(position), mTransform(transform) {}
+      : mFov(fov), mTransform(transform) {}
 
     double GetFov() const { return mFov; }
-    const Point3& GetPosition() const { return mPosition; }
-    Point3& GetPosition() { return mPosition; }
     const Transform& GetTransform() const { return mTransform; }
     Transform& GetTransform() { return mTransform; }
-    // double GetYaw() const { return mYaw; }
-    // double GetPitch() const { return mPitch; }
-    // double GetRoll() const { return mRoll; }
 
     void SetFov(double fov) { mFov = fov; }
-    void SetPosition(const Point3& position) { mPosition = position; }
     void SetTransform(const Transform& transform) { mTransform = transform; }
-    // void SetYaw(double yaw) { mYaw = yaw; }
-    // void SetPitch(double pitch) { mPitch = pitch; }
-    // void SetRoll(double roll) { mRoll = roll; }
+
+    void Forward(float distance) {
+      double cosPitch = std::cos(mTransform.GetPitch());
+      double sinPitch = std::sin(mTransform.GetPitch());
+      double cosYaw = std::cos(mTransform.GetYaw());
+      double sinYaw = std::sin(mTransform.GetYaw());
+      double cosRoll = std::cos(mTransform.GetRoll());
+      double sinRoll = std::sin(mTransform.GetRoll());
+      
+      mTransform.SetPosition(mTransform.GetPosition() - Point3(sinYaw, 0, cosYaw) * distance);
+    }
+
+    void Backward(float distance) { Forward(-1 * distance); }
+    void Left(float distance) {
+      double cosPitch = std::cos(mTransform.GetPitch());
+      double sinPitch = std::sin(mTransform.GetPitch());
+      double cosYaw = std::cos(-mTransform.GetYaw());
+      double sinYaw = std::sin(-mTransform.GetYaw());
+      double cosRoll = std::cos(mTransform.GetRoll());
+      double sinRoll = std::sin(mTransform.GetRoll());
+
+      double leftX = -(cosYaw * cosRoll);
+      double leftY = -(sinPitch * sinYaw * cosRoll - cosPitch * sinRoll);
+      double leftZ = -(cosPitch * sinYaw * cosRoll + sinPitch * sinRoll);
+      
+      mTransform.SetPosition(mTransform.GetPosition() - Point3(leftX, leftY, leftZ) * distance);
+    }
+    void Right(float distance) { Left(-1 * distance); }
+
+    void PanUp(double radians) { mTransform.SetPitch(mTransform.GetPitch() + radians); }
+    void PanDown(double radians) { mTransform.SetPitch(mTransform.GetPitch() - radians); }
+    void PanLeft(double radians) { mTransform.SetYaw(mTransform.GetYaw() - radians); }
+    void PanRight(double radians) { mTransform.SetYaw(mTransform.GetYaw() + radians); }
 };
