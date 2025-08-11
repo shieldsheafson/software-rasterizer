@@ -11,7 +11,7 @@ struct Point3 {
   float mY;
   float mZ;
 
-  Point3(): mX(0), mY(0) {}
+  Point3(): mX(0), mY(0), mZ(0) {}
   Point3(float x, float y, float z): mX(x), mY(y), mZ(z) {}
 
   float Dot(const Point3& other) { return mX * other.mX + mY * other.mY + mZ * other.mZ; }
