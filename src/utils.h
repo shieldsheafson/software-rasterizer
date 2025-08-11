@@ -23,10 +23,8 @@ std::pair<Point, Point > BoundingBox(const Point& a, const Point& b, const Point
 
 void Render(const Model& model, const Point3& modelWorldPosition, RenderTarget& target, const Camera& camera);
 
-// bool PointOnLeftSideOfVector(const Point& a, const Point& b, const Point& p);
+float PointDepth(const Point& point, const Point3& a, const Point3& b, const Point3& c);
 
 float SignedTriangleArea(const Point& a, const Point& b, const Point& c);
-
-// bool PointInTriangle(const Point3& a, const Point3& b, const Point3& c, const Point& p);
 
 Point3 TransformToScreenCoordinates(const Point3& localPoint, const Point& maxPoint, const Camera& camera);

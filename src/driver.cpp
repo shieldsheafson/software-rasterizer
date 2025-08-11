@@ -20,14 +20,16 @@ static int screenHeight = 700;
 static RenderTarget renderTarget(screenWidth, screenHeight);
 
 static Model model("../input/cube.obj");
-Model m = model;
+Model model2("../input/monkey.obj");
 static Transform transform(0.0, 0.0, 0.0, Point3(0,0,0));
 static Camera camera = Camera();
 
 static int start;
 static int times = 0;
 
-static float movementSpeed = 0.5;
+static float movementSpeed = 1;
+static float panSpeed = 0.5;
+static Uint64 lastFrameTime = 0;
 
 // Init
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
@@ -74,26 +76,36 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
       transform.SetRoll(0);
     }
 
-    if (event->type == SDL_EVENT_KEY_DOWN) {
-      if (event->key.key == SDLK_UP) {
-        camera.Forward(movementSpeed);
-      } else if (event->key.key == SDLK_DOWN) {
-        camera.Backward(movementSpeed);
-      } else if (event->key.key == SDLK_LEFT) {
-        camera.Left(movementSpeed);
-      } else if (event->key.key == SDLK_RIGHT) {
-        camera.Right(movementSpeed);
-      } else if (event->key.key == SDLK_Z) {
-        camera.PanLeft(0.05);
-      } else if (event->key.key == SDLK_X) {
-        camera.PanRight(0.05);
-      }
-    }
     return SDL_APP_CONTINUE;
 }
 
 // Runs once each frame
 SDL_AppResult SDL_AppIterate(void *appstate) {
+  Uint64 currentTime = SDL_GetTicks();
+  float deltaTime = (currentTime - lastFrameTime) / 1000.0f; // Convert to seconds
+  lastFrameTime = currentTime;
+  
+  const bool *keystate = SDL_GetKeyboardState(NULL);
+  
+  if (keystate[SDL_SCANCODE_UP]) {
+      camera.Forward(movementSpeed * deltaTime);
+  }
+  if (keystate[SDL_SCANCODE_DOWN]) {
+      camera.Backward(movementSpeed * deltaTime);
+  }
+  if (keystate[SDL_SCANCODE_LEFT]) {
+      camera.Left(movementSpeed * deltaTime);
+  }
+  if (keystate[SDL_SCANCODE_RIGHT]) {
+      camera.Right(movementSpeed * deltaTime);
+  }
+  if (keystate[SDL_SCANCODE_Z]) {
+      camera.PanLeft(panSpeed * deltaTime);
+  }
+  if (keystate[SDL_SCANCODE_X]) {
+      camera.PanRight(panSpeed * deltaTime);
+  }
+
   times++;
   void *pixels;
   int pitch; // the pitch is the length of one row in bytes
@@ -102,14 +114,9 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
   renderTarget.SetPitch(pitch);
   renderTarget.Clear();
 
-  // if (times % 100 < 50) {
-  //   camera.GetTransform().SetYaw(camera.GetTransform().GetYaw() + 0.01);
-  // } else {
-  //   camera.GetTransform().SetYaw(camera.GetTransform().GetYaw() - 0.01);
-  // }
   model.TransformModel(transform);
   Render(model, Point3(-2, 0, 5), renderTarget, camera);
-  Render(m, Point3(2, 0, 4.5), renderTarget, camera);
+  Render(model2, Point3(2, 0, -5), renderTarget, camera);
 
   SDL_UnlockTexture(texture);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);

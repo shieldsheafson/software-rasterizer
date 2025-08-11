@@ -36,5 +36,5 @@ You can try to render your own obj files; add the .obj files to input and change
 MIT License - see LICENSE file for details
 
 ## Thoughts and Plans
-Added movement controls displayed some rather serious bugs in the rasterizer that I shall address tomorrow. I also need to figure out what is cause the triangles to not quite fully fill cause that looks pretty bad.
+I also need to figure out what is cause the triangles to not quite fully fill cause that looks pretty bad.
 I need to clean up the code pretty bad, but that is a project for tomorrow; lots of magic numbers and wacky uncommented code. 

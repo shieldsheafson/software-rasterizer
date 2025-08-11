@@ -1,5 +1,29 @@
 #include "utils.h"
 
+float PointDepth(const Point& point, const Point3& a, const Point3& b, const Point3& c) {
+  float signedTriangleABPArea = SignedTriangleArea(a.TwoD(), b.TwoD(), point);
+  float signedTriangleBCPArea = SignedTriangleArea(b.TwoD(), c.TwoD(), point);
+  float signedTriangleCAPArea = SignedTriangleArea(c.TwoD(), a.TwoD(), point);
+
+  if (signedTriangleABPArea < 0 || signedTriangleBCPArea < 0 || signedTriangleCAPArea < 0) {
+    return -1;
+  }
+
+  float triangleABPArea = std::abs(signedTriangleABPArea);
+  float triangleBCPArea = std::abs(signedTriangleBCPArea);
+  float triangleCAPArea = std::abs(signedTriangleCAPArea);
+
+  float totalTriangleArea = triangleABPArea + triangleBCPArea + triangleCAPArea;
+
+  if (totalTriangleArea == 0) {
+    return -1;
+  }
+
+  return a.mZ * (triangleBCPArea / totalTriangleArea)
+         + b.mZ * (triangleCAPArea / totalTriangleArea)
+         + c.mZ * (triangleABPArea / totalTriangleArea);
+}
+
 Point3 TransformToScreenCoordinates(const Point3& point, const Point& maxPoint, const Camera& camera) {
   // working under the assumption vfov == hfov
   // Point3 p = camera.GetTransform().RotatePoint(localPoint + modelWorldPosition - camera.GetPosition());
@@ -50,6 +74,10 @@ void Render(const Model& model, const Point3& modelWorldPosition, RenderTarget& 
   for (unsigned int i = 0; i < triangles.size(); ++i) {
     Triangle triangle = triangles.at(i);
 
+    if (triangle.GetA().mZ < 0 || triangle.GetB().mZ < 0 || triangle.GetC().mZ < 0) {
+      continue;
+    }
+
     Point maxPoint = Point(target.GetWidth(), target.GetHeight());
 
     // x y are screen coordinantes while z is the original depth
@@ -57,11 +85,7 @@ void Render(const Model& model, const Point3& modelWorldPosition, RenderTarget& 
     Point3 b = TransformToScreenCoordinates(triangle.GetB(), maxPoint, camera);
     Point3 c = TransformToScreenCoordinates(triangle.GetC(), maxPoint, camera);
 
-    Point aScreenCoords = a.TwoD();
-    Point bScreenCoords = b.TwoD();
-    Point cScreenCoords = c.TwoD();
-
-    std::pair<Point, Point > boundingBox = BoundingBox(aScreenCoords, bScreenCoords, cScreenCoords);
+    std::pair<Point, Point > boundingBox = BoundingBox(a.TwoD(), b.TwoD(), c.TwoD());
     int minX = std::max(static_cast<int>(boundingBox.first.mX), 0);
     int maxX = std::min(static_cast<int>(boundingBox.second.mX), target.GetWidth());
     int minY = std::max(static_cast<int>(boundingBox.first.mY), 0);
@@ -71,29 +95,9 @@ void Render(const Model& model, const Point3& modelWorldPosition, RenderTarget& 
       for (int x = minX; x < maxX; ++x) {
         Point currentScreenCoords = Point(x, y);
 
-        float signedTriangleABPArea = SignedTriangleArea(aScreenCoords, bScreenCoords, currentScreenCoords);
-        float signedTriangleBCPArea = SignedTriangleArea(bScreenCoords, cScreenCoords, currentScreenCoords);
-        float signedTriangleCAPArea = SignedTriangleArea(cScreenCoords, aScreenCoords, currentScreenCoords);
-
-        if (signedTriangleABPArea < 0 || signedTriangleBCPArea < 0 || signedTriangleCAPArea < 0) {
-          continue;
-        }
-
-        float triangleABPArea = std::abs(signedTriangleABPArea);
-        float triangleBCPArea = std::abs(signedTriangleBCPArea);
-        float triangleCAPArea = std::abs(signedTriangleCAPArea);
-
-        float totalTriangleArea = triangleABPArea + triangleBCPArea + triangleCAPArea;
-
-        if (totalTriangleArea == 0) {
-          continue;
-        }
-
-        float depth = a.mZ * (triangleBCPArea / totalTriangleArea)
-                + b.mZ * (triangleCAPArea / totalTriangleArea)
-                + c.mZ * (triangleABPArea / totalTriangleArea);
+        float depth = PointDepth(currentScreenCoords, a, b, c);
         
-        if (depth < depthBuffer.at(y).at(x)) {
+        if (depth < depthBuffer.at(y).at(x) && depth >= 0) {
           depthBuffer.at(y).at(x) = depth;
           target.SetPixel(x, y, colors.at(i % 12));
         }
