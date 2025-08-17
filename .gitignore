@@ -21,7 +21,7 @@ x64/
 *.a
 
 # SDL library (we'll add as submodule)
-#SDL/
+SDL/
 
 # Generated files
 src/rasterizerconfig.h
